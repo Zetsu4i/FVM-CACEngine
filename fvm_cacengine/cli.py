@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .chunk_store import ChunkStore
+from .chunking import ChunkingConfig
 from .manifest import ManifestGenerator
 from .server_client import LocalClient
 from .version_switcher import VersionSwitcher
@@ -22,8 +23,16 @@ def _save_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2))
 
 
+def _chunking_config(args: argparse.Namespace) -> ChunkingConfig:
+    return ChunkingConfig(
+        min_size=args.min_size,
+        avg_size=args.avg_size,
+        max_size=args.max_size,
+    )
+
+
 def cmd_scan(args: argparse.Namespace) -> int:
-    generator = ManifestGenerator()
+    generator = ManifestGenerator(_chunking_config(args))
     chunk_store = ChunkStore(Path(args.store_root))
     manifest = generator.generate(args.version, Path(args.sdk_root), chunk_store)
     if args.output:
@@ -34,7 +43,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
 
 
 def cmd_manifest(args: argparse.Namespace) -> int:
-    generator = ManifestGenerator()
+    generator = ManifestGenerator(_chunking_config(args))
     chunk_store = ChunkStore(Path(args.store_root))
     manifest = generator.generate(args.version, Path(args.sdk_root), chunk_store)
     _save_json(Path(args.output), manifest)
@@ -83,6 +92,9 @@ def build_parser() -> argparse.ArgumentParser:
     scan.add_argument("--store-root", required=True)
     scan.add_argument("--version", default="local")
     scan.add_argument("--output")
+    scan.add_argument("--min-size", type=int, default=ChunkingConfig().min_size)
+    scan.add_argument("--avg-size", type=int, default=ChunkingConfig().avg_size)
+    scan.add_argument("--max-size", type=int, default=ChunkingConfig().max_size)
     scan.set_defaults(func=cmd_scan)
 
     manifest = sub.add_parser("manifest", help="Generate versioned manifest")
@@ -90,6 +102,9 @@ def build_parser() -> argparse.ArgumentParser:
     manifest.add_argument("--sdk-root", required=True)
     manifest.add_argument("--store-root", required=True)
     manifest.add_argument("--output", required=True)
+    manifest.add_argument("--min-size", type=int, default=ChunkingConfig().min_size)
+    manifest.add_argument("--avg-size", type=int, default=ChunkingConfig().avg_size)
+    manifest.add_argument("--max-size", type=int, default=ChunkingConfig().max_size)
     manifest.set_defaults(func=cmd_manifest)
 
     upgrade = sub.add_parser("upgrade", help="Upgrade active SDK using missing chunks only")

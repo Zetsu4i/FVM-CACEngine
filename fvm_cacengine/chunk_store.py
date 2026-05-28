@@ -39,7 +39,9 @@ class ChunkStore:
             payload = self._compressor.compress(data)
         else:
             payload = _zlib.compress(data)
-        chunk_path.write_bytes(payload)
+        temp_path = chunk_path.with_suffix(".tmp")
+        temp_path.write_bytes(payload)
+        temp_path.replace(chunk_path)
         return chunk_hash
 
     def has_chunk(self, chunk_hash: str) -> bool:

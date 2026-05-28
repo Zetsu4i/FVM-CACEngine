@@ -6,6 +6,7 @@ from pathlib import Path
 from fvm_cacengine.chunk_store import ChunkStore
 from fvm_cacengine.chunking import ChunkingConfig
 from fvm_cacengine.diff_patch import BinaryDiffPatchEngine
+from fvm_cacengine.hashing import hash_algorithm
 from fvm_cacengine.manifest import ManifestGenerator
 from fvm_cacengine.server_client import LocalClient, MetadataServer
 
@@ -24,7 +25,7 @@ class CoreSystemsTests(unittest.TestCase):
             manifest = generator.generate("3.39.0", sdk_root, store)
 
             self.assertEqual(manifest["version"], "3.39.0")
-            self.assertEqual(manifest["hash_algorithm"], "blake3")
+            self.assertEqual(manifest["hash_algorithm"], hash_algorithm())
             chunks = manifest["files"]["bin/flutter"]["chunks"]
             self.assertGreater(len(chunks), 1)
             for chunk_hash in chunks:

@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from .chunk_store import ChunkStore
-from .chunking import ChunkingConfig, chunk_bytes
+from .chunking import ChunkingConfig, chunk_file
+from .hashing import hash_algorithm
 
 
 class ManifestGenerator:
@@ -20,18 +21,17 @@ class ManifestGenerator:
             if not path.is_file():
                 continue
             rel = path.relative_to(sdk_root).as_posix()
-            data = path.read_bytes()
-            chunk_hashes = [chunk_store.put_chunk(chunk) for chunk in chunk_bytes(data, self.chunking)]
+            chunk_hashes = [chunk_store.put_chunk(chunk) for chunk in chunk_file(path, self.chunking)]
             files[rel] = {
-                "size": len(data),
+                "size": path.stat().st_size,
                 "chunks": chunk_hashes,
             }
 
         return {
             "version": version,
-            "hash_algorithm": "blake3",
+            "hash_algorithm": hash_algorithm(),
             "chunking": {
-                "strategy": "dynamic",
+                "strategy": "fastcdc",
                 "min_size": self.chunking.min_size,
                 "avg_size": self.chunking.avg_size,
                 "max_size": self.chunking.max_size,
