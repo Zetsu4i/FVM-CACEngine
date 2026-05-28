@@ -53,8 +53,9 @@ class FastCDCChunker:
     def _roll_hash(self, value: int, byte: int) -> int:
         return ((value >> 1) + _GEAR_TABLE[byte]) & 0xFFFFFFFFFFFFFFFF
 
-    def find_cut(self, data: memoryview, eof: bool) -> int | None:
-        length = len(data)
+    def find_cut(self, data: bytes | bytearray, eof: bool) -> int | None:
+        view = memoryview(data)
+        length = len(view)
         if length == 0:
             return 0 if eof else None
         if length <= self.config.min_size:
@@ -66,13 +67,13 @@ class FastCDCChunker:
         i = self.config.min_size
 
         while i < normal_end:
-            value = self._roll_hash(value, data[i])
+            value = self._roll_hash(value, view[i])
             if (value & self._mask_small) == 0:
                 return i + 1
             i += 1
 
         while i < end:
-            value = self._roll_hash(value, data[i])
+            value = self._roll_hash(value, view[i])
             if (value & self._mask_large) == 0:
                 return i + 1
             i += 1
@@ -83,16 +84,14 @@ class FastCDCChunker:
 
 
 def _chunk_iter(buffer: bytearray, chunker: FastCDCChunker, eof: bool) -> Iterable[bytes]:
-    view = memoryview(buffer)
     while True:
-        cut = chunker.find_cut(view, eof)
+        cut = chunker.find_cut(buffer, eof)
         if cut is None:
             break
         if cut == 0:
             break
-        yield bytes(view[:cut])
+        yield bytes(buffer[:cut])
         del buffer[:cut]
-        view = memoryview(buffer)
         if not buffer:
             break
 
