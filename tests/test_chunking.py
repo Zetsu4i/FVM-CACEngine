@@ -10,12 +10,14 @@ class ChunkingTests(unittest.TestCase):
         config = ChunkingConfig(min_size=128, avg_size=256, max_size=512)
         data = b"a" * 10_000
         chunks = chunk_bytes(data, config)
+        total_size = sum(len(chunk) for chunk in chunks)
 
         self.assertGreater(len(chunks), 1)
         for chunk in chunks[:-1]:
             self.assertGreaterEqual(len(chunk), config.min_size)
             self.assertLessEqual(len(chunk), config.max_size)
         self.assertLessEqual(len(chunks[-1]), config.max_size)
+        self.assertEqual(total_size, len(data))
 
     def test_chunk_file_matches_chunk_bytes(self):
         config = ChunkingConfig(min_size=64, avg_size=128, max_size=256)
@@ -26,6 +28,7 @@ class ChunkingTests(unittest.TestCase):
             from_bytes = chunk_bytes(data, config)
             from_file = list(chunk_file(path, config, read_size=128))
             self.assertEqual(from_bytes, from_file)
+            self.assertGreater(len(from_file), 1)
 
 
 if __name__ == "__main__":

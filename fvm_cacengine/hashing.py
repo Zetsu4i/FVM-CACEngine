@@ -6,7 +6,7 @@ import hashlib
 
 try:
     import blake3 as _blake3
-except ImportError:  # pragma: no cover - fallback for environments without blake3
+except ImportError:  # pragma: no cover - fallback for environments without BLAKE3
     _blake3 = None
 
 _ALGORITHM = "blake3" if _blake3 is not None else "blake2b-256"

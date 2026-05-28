@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Callable
 
@@ -17,10 +18,21 @@ class MetadataServer:
         self.chunk_store = ChunkStore(self.storage_root)
         self.manifest_generator = ManifestGenerator()
         self.manifests: dict[str, dict] = {}
+        self.manifests_dir = self.storage_root / "manifests"
+        self.manifests_dir.mkdir(parents=True, exist_ok=True)
+        self._load_manifests()
+
+    def _load_manifests(self) -> None:
+        for path in sorted(self.manifests_dir.glob("*.json")):
+            payload = json.loads(path.read_text())
+            version = payload.get("version")
+            if version:
+                self.manifests[version] = payload
 
     def ingest_version(self, version: str, sdk_root: Path) -> dict:
         manifest = self.manifest_generator.generate(version, sdk_root, self.chunk_store)
         self.manifests[version] = manifest
+        (self.manifests_dir / f"{version}.json").write_text(json.dumps(manifest, indent=2))
         return manifest
 
     def get_manifest(self, version: str) -> dict:

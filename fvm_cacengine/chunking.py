@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Iterable
 
 
-def _build_gear_table(seed: int = 0x123456789ABCDEF) -> tuple[int, ...]:
+def _build_gear_table(seed: int = 0x0123456789ABCDEF) -> tuple[int, ...]:
+    """Deterministically build a 256-entry gear table for FastCDC.
+
+    The seed is used to generate a stable pseudo-random table for rolling hash updates.
+    """
     value = seed & 0xFFFFFFFFFFFFFFFF
     table = []
     for _ in range(256):
@@ -45,7 +49,7 @@ class FastCDCChunker:
         if avg_size <= 1:
             bits = 1
         else:
-            bits = max(1, round(math.log2(avg_size)))
+            bits = max(1, int(math.log2(avg_size)))
         mask_small = (1 << (bits + 1)) - 1
         mask_large = (1 << max(1, bits - 1)) - 1
         return mask_small, mask_large
@@ -54,6 +58,11 @@ class FastCDCChunker:
         return ((value >> 1) + _GEAR_TABLE[byte]) & 0xFFFFFFFFFFFFFFFF
 
     def find_cut(self, data: bytes | bytearray, eof: bool) -> int | None:
+        """Return the next cut index.
+
+        If ``eof`` is False and no cut can be determined yet, returns None to request
+        more data. When ``eof`` is True, returns the remaining length.
+        """
         view = memoryview(data)
         length = len(view)
         if length == 0:
@@ -84,6 +93,7 @@ class FastCDCChunker:
 
 
 def _chunk_iter(buffer: bytearray, chunker: FastCDCChunker, eof: bool) -> Iterable[bytes]:
+    """Yield chunks from the buffer and remove processed bytes in-place."""
     while True:
         cut = chunker.find_cut(buffer, eof)
         if cut is None:
