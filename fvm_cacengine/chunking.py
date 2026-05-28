@@ -49,7 +49,12 @@ class FastCDCChunker:
         if avg_size <= 1:
             bits = 1
         else:
-            bits = max(1, int(math.log2(avg_size)))
+            log_value = math.log2(avg_size)
+            low = max(1, int(math.floor(log_value)))
+            high = max(1, int(math.ceil(log_value)))
+            low_size = 1 << low
+            high_size = 1 << high
+            bits = low if abs(avg_size - low_size) <= abs(high_size - avg_size) else high
         mask_small = (1 << (bits + 1)) - 1
         mask_large = (1 << max(1, bits - 1)) - 1
         return mask_small, mask_large

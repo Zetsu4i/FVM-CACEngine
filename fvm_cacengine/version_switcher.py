@@ -23,7 +23,7 @@ class VersionSwitcher:
         removed_files_map_path: Path | None = None,
     ) -> None:
         active_sdk_dir = Path(active_sdk_dir)
-        temp_dir = active_sdk_dir.parent / f".{active_sdk_dir.name}.tmp"
+        temp_dir = active_sdk_dir.parent / f".{active_sdk_dir.name}.switching"
         if temp_dir.exists():
             shutil.rmtree(temp_dir)
         temp_dir.mkdir(parents=True, exist_ok=True)

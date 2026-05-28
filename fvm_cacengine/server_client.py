@@ -32,7 +32,10 @@ class MetadataServer:
     def ingest_version(self, version: str, sdk_root: Path) -> dict:
         manifest = self.manifest_generator.generate(version, sdk_root, self.chunk_store)
         self.manifests[version] = manifest
-        (self.manifests_dir / f"{version}.json").write_text(json.dumps(manifest, indent=2))
+        manifest_path = self.manifests_dir / f"{version}.json"
+        temp_path = manifest_path.with_suffix(".tmp")
+        temp_path.write_text(json.dumps(manifest, indent=2))
+        temp_path.replace(manifest_path)
         return manifest
 
     def get_manifest(self, version: str) -> dict:
