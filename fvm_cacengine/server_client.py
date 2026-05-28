@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable
 
 from .chunk_store import ChunkStore
 from .diff_patch import BinaryDiffPatchEngine
@@ -40,7 +41,7 @@ class LocalClient:
         active_sdk_dir: Path,
         local_manifest: dict,
         target_manifest: dict,
-        fetch_chunk,
+        fetch_chunk: Callable[[str], bytes],
         removed_files_map_path: Path | None = None,
     ) -> dict:
         missing = self.engine.missing_chunks(local_manifest, target_manifest)

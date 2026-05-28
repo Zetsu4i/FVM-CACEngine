@@ -36,8 +36,6 @@ def chunk_bytes(data: bytes, config: ChunkingConfig = ChunkingConfig()) -> list[
 
         if i >= n:
             i = n
-        elif i > end_limit:
-            i = end_limit
 
         chunks.append(data[start:i])
         start = i
