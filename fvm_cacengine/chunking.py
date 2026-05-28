@@ -61,7 +61,8 @@ class FastCDCChunker:
         """Return the next cut index.
 
         If ``eof`` is False and no cut can be determined yet, returns None to request
-        more data. When ``eof`` is True, returns the remaining length.
+        more data. When a cut is found, returns the index after the cut byte (the
+        chunk length). When ``eof`` is True, returns the remaining length.
         """
         view = memoryview(data)
         length = len(view)
@@ -93,7 +94,10 @@ class FastCDCChunker:
 
 
 def _chunk_iter(buffer: bytearray, chunker: FastCDCChunker, eof: bool) -> Iterable[bytes]:
-    """Yield chunks from the buffer and remove processed bytes in-place."""
+    """Yield chunks from the buffer and remove processed bytes in-place.
+
+    ``eof`` indicates whether more data will be appended to the buffer.
+    """
     while True:
         cut = chunker.find_cut(buffer, eof)
         if cut is None:

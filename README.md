@@ -1,6 +1,6 @@
 # FVM-CACEngine
 
-Chunk-addressed Flutter SDK version manager prototype with four core systems:
+Chunk-Addressed Flutter SDK version manager prototype with four core systems:
 
 - Manifest Generator
 - Chunk Store

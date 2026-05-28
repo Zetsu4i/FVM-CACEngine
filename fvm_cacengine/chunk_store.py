@@ -39,7 +39,7 @@ class ChunkStore:
             payload = self._compressor.compress(data)
         else:
             payload = _zlib.compress(data)
-        temp_path = chunk_path.with_suffix(".tmp")
+        temp_path = chunk_path.parent / f"{chunk_path.name}.tmp"
         temp_path.write_bytes(payload)
         try:
             temp_path.replace(chunk_path)
